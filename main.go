@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+
+	"github.com/dustin/go-humanize"
 )
 
 type Room struct {
@@ -29,7 +31,7 @@ func main() {
 		case "3":
 			AddRoom()
 		case "0":
-			fmt.Print("Exiting... \nI hope to see you again. ^^")
+			fmt.Print("Exiting... I hope to see you again. ^^")
 			return
 		default:
 			print("wrong command\n")
@@ -51,9 +53,9 @@ func handlerAllRoomsCommandCondition(allRoomsUserInput string) {
 	case "1":
 		PrintRooms(Rooms)
 	case "2":
-		EmptyRooms()
+		AvailableRooms()
 	case "3":
-		RentedRooms()
+		BookedRooms()
 	default:
 		print("wrong command!\n")
 	}
@@ -66,7 +68,7 @@ func GetRooms() {
 		if command != "0" {
 			handlerAllRoomsCommandCondition(command)
 		} else {
-			return // return yani inke func ro tamoom mikone va mire jayi ke oon ro seda zadan
+			return
 		}
 
 	}
@@ -101,18 +103,18 @@ func isRoomListEmpty(rooms []Room) bool {
 // ->
 func DisplayRooms(rooms []Room) {
 	if isRoomListEmpty(rooms) {
-		fmt.Println("<-----WE DON'T HAVE ANY ROOM----->")
+		fmt.Println("<-----NO ROOM BOOKED----->")
 	} else {
 		PrintRooms(rooms)
 	}
 }
 
-func EmptyRooms() {
+func AvailableRooms() {
 	rooms := FilterRooms(func(item Room) bool { return item.Status == false })
 	DisplayRooms(rooms)
 }
 
-func RentedRooms() {
+func BookedRooms() {
 	rooms := FilterRooms(func(item Room) bool { return item.Status == true })
 	DisplayRooms(rooms)
 }
@@ -137,85 +139,124 @@ func AddRoom() {
 	*rooms = append(*rooms, Room{Id: len(*rooms) + 1, Type: roomType, BedCount: bedCount, Price: price, Status: false})
 }
 
-func GetRoomByIdUserInput() (input int) {
-	fmt.Println("enter id for reserved room: ")
-	fmt.Scan(&input)
+func getInfoFromUser() (id int, nights int, personCount int) {
+	fmt.Println("Enter room info line by line:")
+	fmt.Print("1) Room ID: ")
+	fmt.Scan(&id)
+	fmt.Println("[SAVED] ✅")
+	fmt.Print("2) Nights: ")
+	fmt.Scan(&nights)
+	fmt.Println("[SAVED] ✅")
+	fmt.Print("3) Person count: ")
+	fmt.Scan(&personCount)
+	fmt.Println("Done ✅")
+
 	return
 }
 
-// *.1 -----------------------------------------
-// func GetRoomById(id int) *Room {
-// 	for i, _ := range Rooms {
-// 		if Rooms[i].Id == id {
-// 			return &Rooms[i]
-// 		}
-// 	}
-// 	return nil
-// }
-
-// *2 -----------------------------------------
-// اینجا فانکشنی داریم که میگه من مقدار آدرس خونه ای رو میگیرم که باید bool باشه
-// و بعد پایینتر میگه که خب پس من آدرس خونه ای رو بهت میدم که bool داخلشه
-func GetStatusRoom(id int) *bool {
-	for i, _ := range Rooms {
+func GetRoomById(id int) *Room {
+	for i := range Rooms {
 		if Rooms[i].Id == id {
-			return &Rooms[i].Status
+			return &Rooms[i]
 		}
 	}
 	return nil
 }
 
 func RentRoom() {
-	// *.1 -----------------------------------------
-	// roomItem := GetRoomById(GetRoomByIdUserInput())
-	// roomItem.Status = true
+    id, nights, countPerson := getInfoFromUser()
 
-	// fmt.Printf("%p\n", &Rooms[GetRoomByIdUserInput() - 1].Status)
-	// fmt.Printf("%p", &roomItem.Status)
+    room := GetRoomById(id)
+    if room == nil {
+        fmt.Println("room not found")
+        return
+    }
 
-	// *2 -----------------------------------------
-	roomStatus := GetStatusRoom(GetRoomByIdUserInput())
+    if room.Status {
+        fmt.Println("room isn't available")
+        return
+    }
 
-	*roomStatus = true
+    price, tax, discount, finalPrice := calculateRoomPrice(*room, nights, countPerson)
 
-	fmt.Printf("%p\n", &Rooms[GetRoomByIdUserInput()-1].Status)
-	fmt.Printf("%p", roomStatus)
+    fmt.Printf(
+        "Price: %s | Tax: %s | Discount: %s | Final price: %s\n",
+        humanize.Comma(int64(price)),
+        humanize.Comma(int64(tax)),
+        humanize.Comma(int64(discount)),
+        humanize.Comma(int64(finalPrice)),
+    )
 
+    room.Status = true
+    fmt.Println("room reserved successfully ✅")
+}
+
+func calculateRoomPrice(room Room, nights int, countPerson int) (price int, tax float64, discount float64, finalPrice int) {
+
+	switch room.Type {
+	case "standard":
+		price = (nights * room.Price) * countPerson
+	case "double":
+		price = (nights * room.Price) * countPerson
+	case "suit":
+		price = (nights * room.Price) * countPerson
+	case "single":
+		price = (nights * room.Price) * countPerson
+	}
+
+	discountPercentage := 0.0
+	if nights >= 7 && nights <= 15 {
+		discountPercentage = 0.1
+	} else if nights >= 15 && nights <= 30 {
+		discountPercentage = 0.15
+	} else if nights > 30 {
+		discountPercentage = 0.2
+	}
+
+	tax = float64(price) * 0.09
+	discount = float64(price) * discountPercentage
+	finalPrice = (price + int(tax)) - int(discount)
+
+	return
 }
 
 func generateRoom() []Room {
 	rooms := []Room{}
 
-	rooms = append(rooms, Room{Id: 1, Type: "Single", BedCount: 1, Price: 250, Status: false})
-	rooms = append(rooms, Room{Id: 2, Type: "Single", BedCount: 2, Price: 350, Status: false})
+	rooms = append(rooms, Room{Id: 1, Type: "single", BedCount: 1, Price: 250, Status: false})
+	rooms = append(rooms, Room{Id: 2, Type: "single", BedCount: 2, Price: 350, Status: false})
 	rooms = append(rooms, Room{Id: 3, Type: "double", BedCount: 4, Price: 550, Status: false})
 	rooms = append(rooms, Room{Id: 4, Type: "double", BedCount: 3, Price: 380, Status: false})
 	rooms = append(rooms, Room{Id: 6, Type: "suit", BedCount: 2, Price: 780, Status: false})
 	rooms = append(rooms, Room{Id: 7, Type: "suit", BedCount: 1, Price: 680, Status: false})
 	rooms = append(rooms, Room{Id: 5, Type: "standard", BedCount: 4, Price: 480, Status: false})
 	rooms = append(rooms, Room{Id: 8, Type: "standard", BedCount: 3, Price: 490, Status: false})
-	rooms = append(rooms, Room{Id: 9, Type: "Single", BedCount: 1, Price: 200, Status: false})
-	rooms = append(rooms, Room{Id: 10, Type: "double", BedCount: 2, Price: 320, Status: true})
+	rooms = append(rooms, Room{Id: 9, Type: "single", BedCount: 1, Price: 200, Status: false})
+	rooms = append(rooms, Room{Id: 10, Type: "double", BedCount: 2, Price: 320, Status: false})
 	rooms = append(rooms, Room{Id: 11, Type: "suit", BedCount: 3, Price: 850, Status: false})
 	rooms = append(rooms, Room{Id: 12, Type: "standard", BedCount: 2, Price: 300, Status: false})
-	rooms = append(rooms, Room{Id: 13, Type: "Single", BedCount: 1, Price: 180, Status: false})
+	rooms = append(rooms, Room{Id: 13, Type: "single", BedCount: 1, Price: 180, Status: false})
 	rooms = append(rooms, Room{Id: 14, Type: "double", BedCount: 3, Price: 420, Status: false})
 
 	return rooms
 }
 
-const menu string = `[--Enter a Command--]
-[1] Rooms
-[2] Rent Room
-[3] Add Room [Admin Access]
-[0] Exit
-Command: `
+const menu string = `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       🏨  Hotel Rental System  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ [1]  All Rooms
+ [2]  Rent a Room
+ [3]  Add New Room (Admin)
+ [0]  Exit
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ Your choice: `
 
-const allRoomsMenu string = `1: Rooms List
-  2: Empty Rooms
-    3: Rented Rooms
-      0: Back
-Command: `
+const allRoomsMenu string = `=== Rooms Menu ===
+1) View All Rooms
+2) Available Rooms
+3) Booked Rooms
+0) Back
+➜ `
 
 const tableHeader string = "id       type        bed   price   status"
 const tableHeaderLine string = "--  ---------------  ---   -----   ------"

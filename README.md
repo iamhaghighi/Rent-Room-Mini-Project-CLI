@@ -20,10 +20,9 @@ go run main.go
 ```
 
 ## ✨ Features
-• Add new rooms
-• List all rooms
-• Rent a room
-
+- Add new rooms
+- List all rooms
+- Rent a room
 
 ## 🐧 Menu
 ```

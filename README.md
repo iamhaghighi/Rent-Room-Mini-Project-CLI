@@ -26,12 +26,18 @@ go run main.go
 
 ## 🐧 Menu
 ```
-===== Room Rental System =====
-1. Add New Room
-2. View Rooms
-3. Rent Room
-4. Exit
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       🏨  Hotel Rental System
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ [1]  All Rooms
+ [2]  Rent a Room
+ [3]  Add New Room (Admin)
+ [0]  Exit
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ Your choice:
 ```
+## ✅ TODO
+- [ ] handle user input error
 
 ⚠️ Note
 Data is stored in RAM (temporary memory) – everything will be lost after exiting the program.

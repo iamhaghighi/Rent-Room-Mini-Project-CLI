@@ -7,15 +7,23 @@ import (
 )
 
 type RoomStatus string
+type RoomType string
 
 const (
 	RoomAvailable RoomStatus = "available"
 	RoomBooked    RoomStatus = "booked"
 )
 
+const (
+	RoomSingle   RoomType = "single"
+	RoomDouble   RoomType = "double"
+	RoomStandard RoomType = "standard"
+	RoomSuit     RoomType = "suit"
+)
+
 type Room struct {
 	Id       int
-	Type     string
+	Type     RoomType
 	BedCount int
 	Price    int
 	Status   RoomStatus
@@ -23,30 +31,41 @@ type Room struct {
 
 var Rooms []Room = generateRoom()
 
-func main() {
-	userInput := ""
+func mainUserInput() string {
+	var userInput = ""
+	fmt.Scan(&userInput)
+	return userInput
+}
 
-	for userInput != "0" {
-		print(menu)
-		fmt.Scan(&userInput)
-
-		switch userInput {
-		case "1":
-			GetRooms()
-		case "2":
-			RentRoom()
-		case "3":
-			AddRoom()
-		case "0":
-			fmt.Print("Exiting... I hope to see you again. ^^")
-			return
-		default:
-			print("wrong command\n")
-		}
+func conditionMain(userInput string) {
+	switch userInput {
+	case "1":
+		GetRooms()
+	case "2":
+		RentRoom()
+	case "3":
+		AddRoom()
+	case "0":
+		fmt.Print("Exiting... I hope to see you again. ^^")
+		return
+	default:
+		print("wrong command\n")
 	}
 }
 
-// * AllRoom (Input User)
+func runMain() {
+	var userInput string
+	for userInput != "0" {
+		print(menu)
+		userInput = mainUserInput()
+		conditionMain(userInput)
+	}
+}
+
+func main() {
+	runMain()
+}
+
 func handlerAllRoomsInputUser() string {
 	print(allRoomsMenu)
 	var input = ""
@@ -54,7 +73,6 @@ func handlerAllRoomsInputUser() string {
 	return input
 }
 
-// * AllRoom (Command Condition)
 func handlerAllRoomsCommandCondition(allRoomsUserInput string) {
 	switch allRoomsUserInput {
 	case "1":
@@ -68,7 +86,6 @@ func handlerAllRoomsCommandCondition(allRoomsUserInput string) {
 	}
 }
 
-// * AllRoom (Get Rooms)
 func GetRooms() {
 	for {
 		command := handlerAllRoomsInputUser()
@@ -107,7 +124,6 @@ func isRoomListEmpty(rooms []Room) bool {
 	return len(rooms) == 0
 }
 
-// ->
 func DisplayRooms(rooms []Room) {
 	if isRoomListEmpty(rooms) {
 		fmt.Println("<-----NO ROOM BOOKED----->")
@@ -117,7 +133,7 @@ func DisplayRooms(rooms []Room) {
 }
 
 func AvailableRooms() {
-	rooms := FilterRooms(func(item Room) bool { return item.Status == RoomAvailable})
+	rooms := FilterRooms(func(item Room) bool { return item.Status == RoomAvailable })
 	DisplayRooms(rooms)
 }
 
@@ -126,8 +142,14 @@ func BookedRooms() {
 	DisplayRooms(rooms)
 }
 
-// * Add Room User Input
-func AddRoomUserInput() (roomType string, bedCount int, price int) {
+func scanInt() (int, error) {
+	var val int
+	_, err := fmt.Scan(&val)
+	return val, err
+}
+
+// * add room by admin
+func AddRoomUserInput() (roomType RoomType, bedCount int, price int) {
 	print("input room line by line: (type - bed count - price) \n")
 
 	fmt.Scan(&roomType)
@@ -174,6 +196,7 @@ func RentRoom() {
 	id, nights, countPerson := getInfoFromUser()
 
 	room := GetRoomById(id)
+
 	if room == nil {
 		fmt.Println("room not found")
 		return

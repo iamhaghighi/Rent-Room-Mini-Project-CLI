@@ -5,7 +5,6 @@ import (
 	"charm.land/bubbles/v2/key"
 )
 
-// KeyMap تعریف کلیدهای میانبر
 type KeyMap struct {
 	Up    key.Binding
 	Down  key.Binding
@@ -16,7 +15,7 @@ type KeyMap struct {
 }
 
 func (k KeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Up, k.Down, k.Enter, k.Back, k.Help, k.Quit}
+	return []key.Binding{k.Help, k.Quit}
 }
 
 func (k KeyMap) FullHelp() [][]key.Binding {
@@ -47,11 +46,11 @@ func NewKeyMap() KeyMap {
 		),
 		Help: key.NewBinding(
 			key.WithKeys("h"),
-			key.WithHelp("h", "toggle help"),
+			key.WithHelp("'h'", "toggle help"),
 		),
 		Quit: key.NewBinding(
 			key.WithKeys("q", "ctrl+c"),
-			key.WithHelp("q", "quit"),
+			key.WithHelp("'q'", "quit"),
 		),
 	}
 }
@@ -61,7 +60,6 @@ type Help struct {
 	ShowHelp bool
 	Keys     KeyMap
 }
-
 
 func NewHelp() Help {
 	return Help{

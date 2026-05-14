@@ -3,71 +3,19 @@ package main
 import (
 	"fmt"
 	"os"
+	"rent_room/components"
 	"strings"
 
-	"charm.land/bubbles/v2/help"
-	"charm.land/bubbles/v2/key"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 )
-
-type keyMap struct {
-	Up    key.Binding
-	Down  key.Binding
-	Enter key.Binding
-	Back  key.Binding
-	Help  key.Binding
-	Quit  key.Binding
-}
-
-// keyMap method
-func (k keyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Help, k.Quit}
-}
-
-// keyMap method
-func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{
-		{k.Up, k.Down},
-		{k.Enter, k.Back},
-		{k.Help, k.Quit},
-	}
-}
-
-var keys = keyMap{
-	Up: key.NewBinding(
-		key.WithKeys("up", "k"),
-		key.WithHelp("↑/k", "move up"),
-	),
-	Down: key.NewBinding(
-		key.WithKeys("down", "j"),
-		key.WithHelp("↓/j", "move down"),
-	),
-	Enter: key.NewBinding(
-		key.WithKeys("enter", " "),
-		key.WithHelp("enter", "select"),
-	),
-	Back: key.NewBinding(
-		key.WithKeys("esc", "b"),
-		key.WithHelp("esc/b", "back to menu"),
-	),
-	Help: key.NewBinding(
-		key.WithKeys("h"),
-		key.WithHelp("h", "toggle help"),
-	),
-	Quit: key.NewBinding(
-		key.WithKeys("q", "ctrl+c"),
-		key.WithHelp("q", "quit"),
-	),
-}
 
 type model struct {
 	state   string
 	cursor  int
 	choices []string
 
-	help     help.Model
-	showHelp bool
+	help components.Help
 }
 
 func initialModel() model {
@@ -81,8 +29,7 @@ func initialModel() model {
 			"Add Room",
 			"Exit",
 		},
-		help:     help.New(),
-		showHelp: false,
+		help: components.NewHelp(),
 	}
 }
 
@@ -100,15 +47,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		//* help
 		switch msg.String() {
-		case "?":
-			m.showHelp = !m.showHelp
+		case "h":
+			m.help.Toggle()
 			return m, nil
 		}
-
-		if m.showHelp {
+		if m.help.ShowHelp {
 			switch msg.String() {
 			case "esc", "b":
-				m.showHelp = !m.showHelp
+				m.help.Toggle()
 				return m, nil
 			}
 		}
@@ -177,8 +123,8 @@ func (m model) View() tea.View {
 				Align(lipgloss.Center)
 	)
 
-	if m.showHelp == true {
-		helpView := m.help.FullHelpView(keys.FullHelp())
+	if m.help.ShowHelp {
+		helpView := m.help.Model.FullHelpView(m.help.Keys.FullHelp())
 		return tea.NewView(helpView + "\n\nPress 'esc' or 'b' to back to menu\n")
 	}
 
@@ -211,7 +157,7 @@ func (m model) View() tea.View {
 			s += fmt.Sprintf("%s %s\n", cursor, itemStyle.Render(choice))
 		}
 
-		s += "\n" + m.help.ShortHelpView(keys.ShortHelp())
+		s += "\n" +  m.help.Model.ShortHelpView(m.help.Keys.ShortHelp())
 
 		return tea.NewView(s)
 	}

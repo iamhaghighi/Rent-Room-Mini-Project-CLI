@@ -1,8 +1,9 @@
+// TODO: ADD TUI - REFACTOR ALL CODE
+
 package main
 
 import (
 	"fmt"
-
 	"github.com/dustin/go-humanize"
 )
 
@@ -62,7 +63,7 @@ func runMain() {
 	}
 }
 
-func main() {
+func main1() {
 	runMain()
 }
 

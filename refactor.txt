@@ -1,0 +1,106 @@
+type RoomType string
+type RoomStatus string
+
+// RoomType
+const (
+	RoomTypeSingle   RoomType = "single"
+	RoomTypeDouble   RoomType = "double"
+	RoomTypeStandard RoomType = "standard"
+	RoomTypeSuit     RoomType = "suit"
+)
+
+// RoomStatus
+const (
+	RoomAvailable RoomStatus = "available"
+	RoomBooked    RoomStatus = "booked"
+)
+
+type Room struct {
+	Id       int
+	Type     RoomType
+	BedCount int
+	Price    int
+	Status   RoomStatus
+}
+
+type RoomRepository struct {
+	rooms []Room
+}
+
+func NewRoomRepository() *RoomRepository {
+	return &RoomRepository{
+		rooms: generateRooms(),
+	}
+}
+
+// get all room
+// get available room
+// get booked room
+// rent room
+// add room
+// exit
+
+func userInputMenu() (userInput string) {
+	fmt.Print("input your command: ")
+	fmt.Scan(&userInput)
+	return userInput
+}
+
+func ConditionMenu() {
+	userInput := userInputMenu()
+
+	switch userInput {
+	case "1":
+		getAllRoom()
+	case "2":
+		getAvailableRoom()
+	case "3":
+		getBookedRoom()
+	case "4":
+		addRoom()
+	case "0":
+		fmt.Print("Exiting... I hope to see you again. ^^")
+		return
+	}
+}
+
+func addRoom() {
+	panic("unimplemented")
+}
+
+func getBookedRoom() {
+	panic("unimplemented")
+}
+
+func getAvailableRoom() {
+	panic("unimplemented")
+}
+
+func getAllRoom() {
+	panic("unimplemented")
+}
+
+func main() {
+
+}
+
+func generateRooms() []Room {
+	rooms := []Room{}
+
+	rooms = append(rooms, Room{Id: 1, Type: RoomTypeSingle, BedCount: 1, Price: 250, Status: RoomAvailable})
+	rooms = append(rooms, Room{Id: 2, Type: RoomTypeSingle, BedCount: 2, Price: 350, Status: RoomAvailable})
+	rooms = append(rooms, Room{Id: 3, Type: RoomTypeDouble, BedCount: 4, Price: 550, Status: RoomAvailable})
+	rooms = append(rooms, Room{Id: 4, Type: RoomTypeDouble, BedCount: 3, Price: 380, Status: RoomAvailable})
+	rooms = append(rooms, Room{Id: 6, Type: RoomTypeSuit, BedCount: 2, Price: 780, Status: RoomAvailable})
+	rooms = append(rooms, Room{Id: 7, Type: RoomTypeSuit, BedCount: 1, Price: 680, Status: RoomAvailable})
+	rooms = append(rooms, Room{Id: 5, Type: RoomTypeStandard, BedCount: 4, Price: 480, Status: RoomAvailable})
+	rooms = append(rooms, Room{Id: 8, Type: RoomTypeStandard, BedCount: 3, Price: 490, Status: RoomAvailable})
+	rooms = append(rooms, Room{Id: 9, Type: RoomTypeSingle, BedCount: 1, Price: 200, Status: RoomAvailable})
+	rooms = append(rooms, Room{Id: 10, Type: RoomTypeDouble, BedCount: 2, Price: 320, Status: RoomAvailable})
+	rooms = append(rooms, Room{Id: 11, Type: RoomTypeSuit, BedCount: 3, Price: 850, Status: RoomAvailable})
+	rooms = append(rooms, Room{Id: 12, Type: RoomTypeStandard, BedCount: 2, Price: 300, Status: RoomAvailable})
+	rooms = append(rooms, Room{Id: 13, Type: RoomTypeSingle, BedCount: 1, Price: 180, Status: RoomAvailable})
+	rooms = append(rooms, Room{Id: 14, Type: RoomTypeDouble, BedCount: 3, Price: 420, Status: RoomAvailable})
+
+	return rooms
+}

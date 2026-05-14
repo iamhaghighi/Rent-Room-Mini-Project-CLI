@@ -1,0 +1,187 @@
+package main
+
+import (
+	"fmt"
+	"os"
+	"strings"
+
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
+)
+
+type model struct {
+	state   string
+	cursor  int
+	choices []string
+}
+
+func initialModel() model {
+	return model{
+		state:  "menu",
+		cursor: 0,
+		choices: []string{
+			"All Rooms",
+			"Available Rooms",
+			"Booked Rooms",
+			"Add Room",
+			"Exit",
+		},
+	}
+}
+
+func (m model) Init() tea.Cmd {
+	return nil
+}
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyPressMsg:
+		if m.state == "menu" {
+			switch msg.String() {
+			case "up", "k":
+				if m.cursor > 0 {
+					m.cursor--
+				}
+			case "down", "j":
+				if m.cursor < len(m.choices)-1 {
+					m.cursor++
+				}
+			case "enter", "space":
+				switch m.cursor {
+				case 0:
+					m.state = "all"
+				case 1:
+					m.state = "available"
+				case 2:
+					m.state = "booked"
+				case 3:
+					m.state = "add"
+				case 4:
+					return m, tea.Quit
+				}
+			case "q":
+				return m, tea.Quit
+			}
+		}
+
+		if m.state != "menu" {
+			switch msg.String() {
+			case "esc", "b":
+				m.state = "menu"
+			}
+		}
+	}
+
+	return m, nil
+}
+
+func (m model) View() tea.View {
+
+	var (
+		normalStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#FFF"))
+
+		// cursor
+		selectedStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#ff7f6a")).
+				Bold(true)
+				// #ff7f6a - #7fd6b3
+
+		// title
+		titleStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("#5fcca3")).
+				Align(lipgloss.Center)
+
+		subtitleStyle = lipgloss.NewStyle().
+				Foreground(lipgloss.Color("244")).
+				Italic(true).
+				Align(lipgloss.Center)
+	)
+
+	if m.state == "menu" {
+		title := titleStyle.Render("🏨 Hotel Rental System")
+		subtitle := subtitleStyle.Render("Manage Room Easy")
+
+		width := lipgloss.Width(title) + 4
+		if width < 34 {
+			width = 34
+		}
+
+		top := "╭" + strings.Repeat("─", width-2) + "╮"
+		bottom := "╰" + strings.Repeat("─", width-2) + "╯"
+
+		s := "\n" + top + "\n"
+		s += "│" + lipgloss.Place(width-2, 1, lipgloss.Center, lipgloss.Center, title) + "│\n"
+		s += "│" + lipgloss.Place(width-2, 1, lipgloss.Center, lipgloss.Center, subtitle) + "│\n"
+		s += bottom + "\n\n"
+
+		for i, choice := range m.choices {
+			cursor := "[ ]"
+			itemStyle := normalStyle
+
+			if m.cursor == i {
+				cursor = selectedStyle.Render("[>]")
+				itemStyle = selectedStyle
+			}
+
+			s += fmt.Sprintf("%s %s\n", cursor, itemStyle.Render(choice))
+		}
+
+		s += "\nUse ↑/↓ to navigate"
+		s += "\nPress Enter to select"
+		s += "\nPress q to quit\n"
+
+		return tea.NewView(s)
+	}
+
+	if m.state == "all" {
+		s := "\n📌 ALL ROOMS\n\n"
+		s += "1. Room 101 (Available)\n"
+		s += "2. Room 102 (Booked)\n"
+		s += "3. Room 103 (Available)\n"
+		s += "4. Room 104 (Booked)\n"
+		s += "\n─────────────────────────────"
+		s += "\nPress 'esc' or 'b' to back to menu\n"
+		return tea.NewView(s)
+	}
+
+	if m.state == "available" {
+		s := "\n✅ AVAILABLE ROOMS\n\n"
+		s += "• Room 101\n"
+		s += "• Room 103\n"
+		s += "• Room 105\n"
+		s += "\n─────────────────────────────"
+		s += "\nPress 'esc' or 'b' to back to menu\n"
+		return tea.NewView(s)
+	}
+
+	if m.state == "booked" {
+		s := "\n🔴 BOOKED ROOMS\n\n"
+		s += "• Room 102 (John Doe)\n"
+		s += "• Room 104 (Jane Smith)\n"
+		s += "• Room 106 (Bob Johnson)\n"
+		s += "\n─────────────────────────────"
+		s += "\nPress 'esc' or 'b' to back to menu\n"
+		return tea.NewView(s)
+	}
+
+	if m.state == "add" {
+		s := "\n➕ ADD NEW ROOM\n\n"
+		s += "Room Number: ____\n"
+		s += "Status: [Available] Booked\n"
+		s += "\n[DEMO MODE - Press any key to back]\n"
+		s += "\n─────────────────────────────"
+		s += "\nPress 'esc' or 'b' to back to menu\n"
+		return tea.NewView(s)
+	}
+
+	return tea.NewView("Unknown state")
+}
+
+func main() {
+	p := tea.NewProgram(initialModel())
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Error: %v", err)
+		os.Exit(1)
+	}
+}

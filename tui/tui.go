@@ -5,14 +5,69 @@ import (
 	"os"
 	"strings"
 
+	"charm.land/bubbles/v2/help"
+	"charm.land/bubbles/v2/key"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 )
+
+type keyMap struct {
+	Up    key.Binding
+	Down  key.Binding
+	Enter key.Binding
+	Back  key.Binding
+	Help  key.Binding
+	Quit  key.Binding
+}
+
+// keyMap method
+func (k keyMap) ShortHelp() []key.Binding {
+	return []key.Binding{k.Help, k.Quit}
+}
+
+// keyMap method
+func (k keyMap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{k.Up, k.Down},
+		{k.Enter, k.Back},
+		{k.Help, k.Quit},
+	}
+}
+
+var keys = keyMap{
+	Up: key.NewBinding(
+		key.WithKeys("up", "k"),
+		key.WithHelp("↑/k", "move up"),
+	),
+	Down: key.NewBinding(
+		key.WithKeys("down", "j"),
+		key.WithHelp("↓/j", "move down"),
+	),
+	Enter: key.NewBinding(
+		key.WithKeys("enter", " "),
+		key.WithHelp("enter", "select"),
+	),
+	Back: key.NewBinding(
+		key.WithKeys("esc", "b"),
+		key.WithHelp("esc/b", "back to menu"),
+	),
+	Help: key.NewBinding(
+		key.WithKeys("h"),
+		key.WithHelp("h", "toggle help"),
+	),
+	Quit: key.NewBinding(
+		key.WithKeys("q", "ctrl+c"),
+		key.WithHelp("q", "quit"),
+	),
+}
 
 type model struct {
 	state   string
 	cursor  int
 	choices []string
+
+	help     help.Model
+	showHelp bool
 }
 
 func initialModel() model {
@@ -26,6 +81,8 @@ func initialModel() model {
 			"Add Room",
 			"Exit",
 		},
+		help:     help.New(),
+		showHelp: false,
 	}
 }
 
@@ -35,9 +92,31 @@ func (m model) Init() tea.Cmd {
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+
+	case tea.WindowSizeMsg:
+		m.help.SetWidth(msg.Width)
+
 	case tea.KeyPressMsg:
-		if m.state == "menu" {
+
+		//* help
+		switch msg.String() {
+		case "?":
+			m.showHelp = !m.showHelp
+			return m, nil
+		}
+
+		if m.showHelp {
 			switch msg.String() {
+			case "esc", "b":
+				m.showHelp = !m.showHelp
+				return m, nil
+			}
+		}
+
+		if m.state == "menu" {
+
+			switch msg.String() {
+
 			case "up", "k":
 				if m.cursor > 0 {
 					m.cursor--
@@ -59,7 +138,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				case 4:
 					return m, tea.Quit
 				}
-			case "q":
+			case "q", "ctrl+c":
 				return m, tea.Quit
 			}
 		}
@@ -85,7 +164,7 @@ func (m model) View() tea.View {
 		selectedStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color("#ff7f6a")).
 				Bold(true)
-				// #ff7f6a - #7fd6b3
+		// #ff7f6a - #7fd6b3
 
 		// title
 		titleStyle = lipgloss.NewStyle().
@@ -97,6 +176,11 @@ func (m model) View() tea.View {
 				Italic(true).
 				Align(lipgloss.Center)
 	)
+
+	if m.showHelp == true {
+		helpView := m.help.FullHelpView(keys.FullHelp())
+		return tea.NewView(helpView + "\n\nPress 'esc' or 'b' to back to menu\n")
+	}
 
 	if m.state == "menu" {
 		title := titleStyle.Render("🏨 Hotel Rental System")
@@ -127,9 +211,7 @@ func (m model) View() tea.View {
 			s += fmt.Sprintf("%s %s\n", cursor, itemStyle.Render(choice))
 		}
 
-		s += "\nUse ↑/↓ to navigate"
-		s += "\nPress Enter to select"
-		s += "\nPress q to quit\n"
+		s += "\n" + m.help.ShortHelpView(keys.ShortHelp())
 
 		return tea.NewView(s)
 	}

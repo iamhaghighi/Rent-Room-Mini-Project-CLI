@@ -10,12 +10,34 @@ import (
 	"charm.land/lipgloss/v2"
 )
 
+var (
+	normalStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#FFF"))
+
+	// cursor
+	selectedStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#ff7f6a")).
+			Bold(true)
+	// #ff7f6a - #7fd6b3
+
+	// title
+	titleStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#5fcca3")).
+			Align(lipgloss.Center)
+
+	subtitleStyle = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("244")).
+			Italic(true).
+			Align(lipgloss.Center)
+)
+
 type model struct {
 	state   string
 	cursor  int
 	choices []string
 
-	help components.Help
+	table components.TableModel
+	help  components.Help
 }
 
 func initialModel() model {
@@ -29,6 +51,7 @@ func initialModel() model {
 			"Add Room",
 			"Exit",
 		},
+		table: components.NewStyleTable(),
 		help: components.NewHelp(),
 	}
 }
@@ -102,30 +125,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() tea.View {
 
-	var (
-		normalStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#FFF"))
-
-		// cursor
-		selectedStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#ff7f6a")).
-				Bold(true)
-		// #ff7f6a - #7fd6b3
-
-		// title
-		titleStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("#5fcca3")).
-				Align(lipgloss.Center)
-
-		subtitleStyle = lipgloss.NewStyle().
-				Foreground(lipgloss.Color("244")).
-				Italic(true).
-				Align(lipgloss.Center)
-	)
-
 	if m.help.ShowHelp {
 		helpView := m.help.Model.FullHelpView(m.help.Keys.FullHelp())
-		return tea.NewView(helpView + "\n\nPress 'esc' or 'b' to back to menu\n")
+		return tea.NewView(helpView + "\n\nPress 'h' to back to menu\n")
 	}
 
 	if m.state == "menu" {
@@ -157,20 +159,13 @@ func (m model) View() tea.View {
 			s += fmt.Sprintf("%s %s\n", cursor, itemStyle.Render(choice))
 		}
 
-		s += "\n" +  m.help.Model.ShortHelpView(m.help.Keys.ShortHelp())
+		s += "\n" + m.help.Model.ShortHelpView(m.help.Keys.ShortHelp())
 
 		return tea.NewView(s)
 	}
 
 	if m.state == "all" {
-		s := "\n📌 ALL ROOMS\n\n"
-		s += "1. Room 101 (Available)\n"
-		s += "2. Room 102 (Booked)\n"
-		s += "3. Room 103 (Available)\n"
-		s += "4. Room 104 (Booked)\n"
-		s += "\n─────────────────────────────"
-		s += "\nPress 'esc' or 'b' to back to menu\n"
-		return tea.NewView(s)
+		return m.table.RenderViewTable()
 	}
 
 	if m.state == "available" {

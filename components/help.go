@@ -5,7 +5,7 @@ import (
 	"charm.land/bubbles/v2/key"
 )
 
-type KeyMap struct {
+type keyMap struct {
 	Up    key.Binding
 	Down  key.Binding
 	Enter key.Binding
@@ -14,20 +14,8 @@ type KeyMap struct {
 	Quit  key.Binding
 }
 
-func (k KeyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Help, k.Quit}
-}
-
-func (k KeyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{
-		{k.Up, k.Down},
-		{k.Enter, k.Back},
-		{k.Help, k.Quit},
-	}
-}
-
-func NewKeyMap() KeyMap {
-	return KeyMap{
+func NewKeyMap() keyMap {
+	return keyMap{
 		Up: key.NewBinding(
 			key.WithKeys("up", "k"),
 			key.WithHelp("↑/k", "move up"),
@@ -55,10 +43,22 @@ func NewKeyMap() KeyMap {
 	}
 }
 
+func (k keyMap) ShortHelp() []key.Binding {
+	return []key.Binding{k.Up, k.Down, k.Help, k.Quit}
+}
+
+func (k keyMap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{k.Up, k.Down},
+		{k.Enter, k.Back},
+		{k.Help, k.Quit},
+	}
+}
+
 type Help struct {
 	Model    help.Model
 	ShowHelp bool
-	Keys     KeyMap
+	Keys     keyMap
 }
 
 func NewHelp() Help {
